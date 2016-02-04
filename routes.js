@@ -15,8 +15,8 @@ var routes = function (app) {
 
     //Error Handlers (must be last)
     app.use(function (err, req, res, next) {
-        console.err(err);
-        res.send(err.status || 500, err);
+        console.error(err);
+        res.status(err.status || 500).send(err);
     });
 };
 
