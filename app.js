@@ -24,13 +24,17 @@ app.db.connect(function (err) {
 //create connection to elasticsearch
 //todo: create connection to elasticsearch
 
+//setup controllers
+app.controllers = {
+    users: require('./users/controller')(app)
+};
+
+//setup models
+app.models = {
+    users: require('./users/model')(app)
+};
+
 //include routes
 require('./routes')(app);
-
-// error handlers
-// development error handler
-// will print stacktrace
-
-
 
 module.exports = app;
