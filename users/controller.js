@@ -91,8 +91,10 @@ var usersController = function (app) {
     }
 
     function updateUser(req, res, next) {
-        next('Not yet implemented');
+        var tempUser= ()
     }
+
+
 
     return {
         getAllUsers: getAllUsers,

@@ -16,10 +16,14 @@ var usersModel = function (app) {
         getAllFromUser: "SELECT * FROM user",
         getAllFromUserWhereIdUserMatches: "SELECT * FROM user WHERE idUser=?",
         createNewUser: "INSERT INTO user SET ?",
+        updateUser: "UPDATE user WHERE isUser=? SET ?",
+
 
         //record properties
         propertiesThatCanBeSetWhenCreatingNewUser: ['username', 'password', 'email'],
         propertiesRequiredToCreateNewUser: ['username', 'password', 'email'],
+        propertiesThatCanBeEdited:['username', 'password', 'email', 'isActive'],
+
 
         //functions
         encryptPassword: encryptPassword
