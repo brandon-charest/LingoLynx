@@ -26,12 +26,14 @@ app.db.connect(function (err) {
 
 //setup controllers
 app.controllers = {
-    users: require('./users/controller')(app)
+    users: require('./users/controller')(app),
+    languages: require('./languages/controller')(app)
 };
 
 //setup models
 app.models = {
-    users: require('./users/model')(app)
+    users: require('./users/model')(app),
+    languages: require('./languages/model')(app)
 };
 
 //include routes

@@ -12,6 +12,7 @@ var routes = function (app) {
     require('./users/routes')(app);
 
     //Languages
+    require('./languages/routes')(app);
 
     //Error Handlers (must be last)
     app.use(function (err, req, res, next) {
