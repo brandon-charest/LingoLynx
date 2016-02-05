@@ -1,4 +1,26 @@
+var async = require('async');
+var q = require('q');
+
 var usersController = function (app) {
+    function queryDBForUser(userId) {
+        var deferred = q.defer();
+
+        app.db.query(app.models.users.getAllFromUserWhereIdUserMatches, [userId], function (err, rows) {
+            if (err) {
+                deferred.reject(err);
+                return;
+            }
+
+            if (rows && rows[0] && rows[0].idUser && rows[0].idUser.toString() === userId.toString()) {
+                deferred.resolve(rows[0]);
+                return;
+            }
+
+        });
+
+        return deferred.promise;
+    }
+
     function getAllUsers(req, res, next) {
         app.db.query(app.models.users.getAllFromUser, function (err, rows) {
             if (err) {
@@ -18,21 +40,18 @@ var usersController = function (app) {
             return;
         }
 
-        app.db.query(app.models.users.getAllFromUserWhereIdUserMatches, [idUserFromRequest], function (err, rows) {
-            if (err) {
+        queryDBForUser(idUserFromRequest)
+            .then(function (user) {
+                res.send(user);
+            })
+            .catch(function (err) {
                 next(err);
-                return;
-            }
+            })
+            .done();
 
-            if (rows && rows[0] && rows[0].idUser && rows[0].idUser.toString() === idUserFromRequest) {
-                res.send(rows[0]);
-                return;
-            }
-
-            next('No user matches that id');
-        });
     }
 
+    //todo: redo this function and make it use async
     function createUser(req, res, next) {
         var user = {};
 
@@ -47,10 +66,11 @@ var usersController = function (app) {
 
         if (!allRequiredPropertiedToCreateNewUserArePresent) {
             next('Missing the following required fields: ' + missingRequiredPropertiesToCreateNewUser);
+            return;
         }
 
         //todo: make isActive default to true in schema-model
-        if(!user.isActive){
+        if (!user.isActive) {
             user.isActive = true;
         }
 
@@ -69,19 +89,14 @@ var usersController = function (app) {
                         next(err);
                         return;
                     }
-                    app.db.query(app.models.users.getAllFromUserWhereIdUserMatches, [results.insertId], function (err, rows) {
-                        if (err) {
+                    queryDBForUser(results.insertId)
+                        .then(function (user) {
+                            res.send(user);
+                        })
+                        .catch(function (err) {
                             next(err);
-                            return;
-                        }
-
-                        if (rows && rows[0] && rows[0].idUser && rows[0].idUser.toString() === results.insertId.toString()) {
-                            res.send(rows[0]);
-                            return;
-                        }
-
-                        next('Could not retrieve user after inserting it');
-                    });
+                        })
+                        .done();
                 });
             })
             .catch(function (err) {
@@ -91,10 +106,106 @@ var usersController = function (app) {
     }
 
     function updateUser(req, res, next) {
-        var tempUser= ()
+        if (!req.params.user_id) {
+            next('missing idUser in request params');
+            return;
+        }
+
+        var idUser = req.params.user_id;
+        var user = {};
+        var updatedUser;
+
+        async.series([
+            //check if all required fields are present in request
+            function (callback) {
+                var missingRequiredPropertiesToUpdateUser = [];
+
+                app.models.users.propertiesRequiredToUpdateUser.forEach(function (propertyRequiredToUpdateUser) {
+                    if (!req.body[propertyRequiredToUpdateUser]) {
+                        missingRequiredPropertiesToUpdateUser.push(propertyRequiredToUpdateUser);
+                    }
+                });
+
+                if (missingRequiredPropertiesToUpdateUser.length) {
+                    callback(missingRequiredPropertiesToUpdateUser);
+                } else {
+                    callback();
+                }
+            },
+            //encrypt password if there is password in the body
+            function (callback) {
+                if (!req.body.password) {
+                    callback();
+                    return;
+                }
+
+                app.models.users.encryptPassword(req.body.password)
+                    .then(function (encryptedPassword) {
+                        req.body.password = encryptedPassword;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
+            },
+            //create user object
+            function (callback) {
+                var thereExistsAPropertyThatWillBeUpdated;
+                app.models.users.propertiesThatCanBeSetWhenUpdatingUser.forEach(function (userProperty) {
+                    if (req.body[userProperty]) {
+                        user[userProperty] = req.body[userProperty]
+                        thereExistsAPropertyThatWillBeUpdated = true;
+                    }
+                });
+
+                if (thereExistsAPropertyThatWillBeUpdated) {
+                    callback()
+                } else {
+                    callback('There are no properties to update');
+                }
+            },
+            //update user
+            function (callback) {
+                var idUserAsAnInt;
+                try {
+                    idUserAsAnInt = parseInt(idUser);
+                } catch (exception) {
+                    callback(exception);
+                }
+
+
+                app.db.query(app.models.users.updateUser, [user, idUserAsAnInt], function (err) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    callback();
+                });
+            },
+            //get the user
+            function (callback) {
+                queryDBForUser(idUser)
+                    .then(function (user) {
+                        updatedUser = user;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
+            }
+        ], function (err) {
+            if (err) {
+                next(err);
+            } else if (updatedUser) {
+                res.send(updatedUser);
+            } else {
+                next('could not retrieve user');
+            }
+        });
+
     }
-
-
 
     return {
         getAllUsers: getAllUsers,
