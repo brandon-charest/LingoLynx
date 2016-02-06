@@ -51,58 +51,94 @@ var usersController = function (app) {
 
     }
 
-    //todo: redo this function and make it use async
     function createUser(req, res, next) {
         var user = {};
+        var newUser;
+        var newUserId;
 
-        var allRequiredPropertiedToCreateNewUserArePresent = true;
-        var missingRequiredPropertiesToCreateNewUser = [];
-        app.models.users.propertiesRequiredToCreateNewUser.forEach(function (propertyRequiredToCreateNewUser) {
-            if (!req.body[propertyRequiredToCreateNewUser]) {
-                allRequiredPropertiedToCreateNewUserArePresent = false;
-                missingRequiredPropertiesToCreateNewUser.push(propertyRequiredToCreateNewUser);
-            }
-        });
+        async.series([
+            //check if all required fields are present in request
+            function (callback) {
+                var missingRequiredPropertiesToCreateNewUser = [];
 
-        if (!allRequiredPropertiedToCreateNewUserArePresent) {
-            next('Missing the following required fields: ' + missingRequiredPropertiesToCreateNewUser);
-            return;
-        }
+                app.models.users.propertiesRequiredToCreateNewUser.forEach(function (propertyRequiredToCreateNewUser) {
+                    if (!req.body[propertyRequiredToCreateNewUser]) {
+                        missingRequiredPropertiesToCreateNewUser.push(propertyRequiredToCreateNewUser);
+                    }
+                });
 
-        //todo: make isActive default to true in schema-model
-        if (!user.isActive) {
-            user.isActive = true;
-        }
+                if (missingRequiredPropertiesToCreateNewUser.length) {
+                    callback('Missing the following required fields: ' + missingRequiredPropertiesToCreateNewUser);
+                } else {
+                    callback();
+                }
+            },
+            //encrypt password if there is password in the body
+            function (callback) {
+                if (!req.body.password) {
+                    callback();
+                    return;
+                }
 
-        app.models.users.encryptPassword(req.body.password)
-            .then(function (encryptedPassword) {
-                req.body.password = encryptedPassword;
-
+                app.models.users.encryptPassword(req.body.password)
+                    .then(function (encryptedPassword) {
+                        req.body.password = encryptedPassword;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
+            },
+            //create user object
+            function (callback) {
                 app.models.users.propertiesThatCanBeSetWhenCreatingNewUser.forEach(function (userProperty) {
                     if (req.body[userProperty]) {
-                        user[userProperty] = req.body[userProperty]
+                        user[userProperty] = req.body[userProperty];
                     }
                 });
 
+                callback();
+            },
+            //set user as active
+            function (callback) {
+                user.isActive = true;
+                callback();
+            },
+            //insert user into db
+            function (callback) {
                 app.db.query(app.models.users.createNewUser, [user], function (err, results) {
                     if (err) {
-                        next(err);
+                        callback(err);
                         return;
                     }
-                    queryDBForUser(results.insertId)
-                        .then(function (user) {
-                            res.send(user);
-                        })
-                        .catch(function (err) {
-                            next(err);
-                        })
-                        .done();
+
+                    newUserId = results.insertId;
+                    callback();
                 });
-            })
-            .catch(function (err) {
+            },
+            //todo: make insert user return user directly and remove extra call to db
+            //get the user
+            function (callback) {
+                queryDBForUser(newUserId)
+                    .then(function (user) {
+                        newUser = user;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
+            }
+        ], function (err) {
+            if (err) {
                 next(err);
-            })
-            .done();
+            } else if (newUser) {
+                res.send(newUser);
+            } else {
+                next('could not retrieve user');
+            }
+        });
     }
 
     function updateUser(req, res, next) {
@@ -127,7 +163,7 @@ var usersController = function (app) {
                 });
 
                 if (missingRequiredPropertiesToUpdateUser.length) {
-                    callback(missingRequiredPropertiesToUpdateUser);
+                    callback('Missing the following required fields: ' + missingRequiredPropertiesToUpdateUser);
                 } else {
                     callback();
                 }
@@ -154,7 +190,7 @@ var usersController = function (app) {
                 var thereExistsAPropertyThatWillBeUpdated;
                 app.models.users.propertiesThatCanBeSetWhenUpdatingUser.forEach(function (userProperty) {
                     if (req.body[userProperty]) {
-                        user[userProperty] = req.body[userProperty]
+                        user[userProperty] = req.body[userProperty];
                         thereExistsAPropertyThatWillBeUpdated = true;
                     }
                 });
@@ -174,7 +210,6 @@ var usersController = function (app) {
                     callback(exception);
                 }
 
-
                 app.db.query(app.models.users.updateUser, [user, idUserAsAnInt], function (err) {
                     if (err) {
                         callback(err);
@@ -183,6 +218,7 @@ var usersController = function (app) {
                     callback();
                 });
             },
+            //todo: make update user return user directly and remove extra call to db
             //get the user
             function (callback) {
                 queryDBForUser(idUser)
