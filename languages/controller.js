@@ -51,49 +51,76 @@ var languagesController = function (app) {
 
     }
 
-    //todo: redo this function and make it use async
     function createLanguage(req, res, next) {
         var language = {};
+        var newLanguage;
+        var newLanguageId;
 
-        var allRequiredPropertiedToCreateNewLanguageArePresent = true;
-        var missingRequiredPropertiesToCreateNewLanguage = [];
-        app.models.languages.propertiesRequiredToCreateNewLanguage.forEach(function (propertyRequiredToCreateNewLanguage) {
-            if (!req.body[propertyRequiredToCreateNewLanguage]) {
-                allRequiredPropertiedToCreateNewLanguageArePresent = false;
-                missingRequiredPropertiesToCreateNewLanguage.push(propertyRequiredToCreateNewLanguage);
+        async.series([
+            //check if all required fields are present in request
+            function (callback) {
+                var missingRequiredPropertiesToCreateNewLanguage = [];
+
+                app.models.languages.propertiesRequiredToCreateNewLanguage.forEach(function (propertyRequiredToCreateNewLanguage) {
+                    if (!req.body[propertyRequiredToCreateNewLanguage]) {
+                        missingRequiredPropertiesToCreateNewLanguage.push(propertyRequiredToCreateNewLanguage);
+                    }
+                });
+
+                if (missingRequiredPropertiesToCreateNewLanguage.length) {
+                    callback('Missing the following required fields: ' + missingRequiredPropertiesToCreateNewLanguage);
+                } else {
+                    callback();
+                }
+            },
+            //create language object
+            function (callback) {
+                app.models.languages.propertiesThatCanBeSetWhenCreatingNewLanguage.forEach(function (languageProperty) {
+                    if (req.body[languageProperty]) {
+                        language[languageProperty] = req.body[languageProperty];
+                    }
+                });
+
+                callback();
+            },
+            //set language as active
+            function (callback) {
+                language.isActive = true;
+                callback();
+            },
+            //insert language into db
+            function (callback) {
+                app.db.query(app.models.languages.createNewLanguage, [language], function (err, results) {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+
+                    newLanguageId = results.insertId;
+                    callback();
+                });
+            },
+            //todo: make insert language return language directly and remove extra call to db
+            //get the language
+            function (callback) {
+                queryDBForLanguage(newLanguageId)
+                    .then(function (language) {
+                        newLanguage = language;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
             }
-        });
-
-        if (!allRequiredPropertiedToCreateNewLanguageArePresent) {
-            next('Missing the following required fields: ' + missingRequiredPropertiesToCreateNewLanguage);
-            return;
-        }
-
-        //todo: make isActive default to true in schema-model
-        if (!language.isActive) {
-            language.isActive = true;
-        }
-
-
-        app.models.languages.propertiesThatCanBeSetWhenCreatingNewLanguage.forEach(function (languageProperty) {
-            if (req.body[languageProperty]) {
-                language[languageProperty] = req.body[languageProperty]
-            }
-        });
-
-        app.db.query(app.models.languages.createNewLanguage, [language], function (err, results) {
+        ], function (err) {
             if (err) {
                 next(err);
-                return;
+            } else if (newLanguage) {
+                res.send(newLanguage);
+            } else {
+                next('could not retrieve language');
             }
-            queryDBForLanguage(results.insertId)
-                .then(function (language) {
-                    res.send(language);
-                })
-                .catch(function (err) {
-                    next(err);
-                })
-                .done();
         });
     }
 
@@ -119,7 +146,7 @@ var languagesController = function (app) {
                 });
 
                 if (missingRequiredPropertiesToUpdateLanguage.length) {
-                    callback(missingRequiredPropertiesToUpdateLanguage);
+                    callback('Missing the following required fields: ' + missingRequiredPropertiesToUpdateLanguage);
                 } else {
                     callback();
                 }
@@ -158,6 +185,7 @@ var languagesController = function (app) {
                     callback();
                 });
             },
+            //todo: make update language return language directly and remove extra call to db
             //get the language
             function (callback) {
                 queryDBForLanguage(idLanguage)
