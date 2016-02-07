@@ -1,6 +1,10 @@
 var q = require('q');
 
 var languagesModel = function (app) {
+    function getLanguagesEnglishNameFromIdLanguage(){
+        throw 'not yet implemented';
+    }
+
     return {
         //db queries
         getAllFromLanguage: "SELECT * FROM language",
@@ -12,8 +16,10 @@ var languagesModel = function (app) {
         propertiesThatCanBeSetWhenCreatingNewLanguage: ['englishName', 'name'],
         propertiesRequiredToCreateNewLanguage: ['englishName', 'name'],
         propertiesThatCanBeSetWhenUpdatingLanguage:['englishName', 'name', 'isActive'],
-        propertiesRequiredToUpdateLanguage: []
+        propertiesRequiredToUpdateLanguage: [],
 
+        //functions
+        getLanguagesEnglishNameFromIdLanguage: getLanguagesEnglishNameFromIdLanguage
     };
 };
 

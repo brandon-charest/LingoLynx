@@ -18,13 +18,11 @@ var usersModel = function (app) {
         createNewUser: "INSERT INTO user SET ?",
         updateUser: "UPDATE user SET ? WHERE idUser=?",
 
-
         //record properties
         propertiesThatCanBeSetWhenCreatingNewUser: ['username', 'password', 'email'],
         propertiesRequiredToCreateNewUser: ['username', 'password', 'email'],
         propertiesThatCanBeSetWhenUpdatingUser:['username', 'password', 'email', 'isActive'],
         propertiesRequiredToUpdateUser: [],
-
 
         //functions
         encryptPassword: encryptPassword

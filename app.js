@@ -1,6 +1,7 @@
 var express = require('express');
 var path = require('path');
 var mysql = require('mysql');
+var elasticsearch = require('elasticsearch');
 
 var app = express();
 
@@ -22,18 +23,32 @@ app.db.connect(function (err) {
 });
 
 //create connection to elasticsearch
-//todo: create connection to elasticsearch
+//TODO: Move ES information to config file
+app.es = elasticsearch.Client({
+    host: 'localhost:9200',
+    log: 'trace'
+});
+
+app.es.ping({}, function (err) {
+    if (err) {
+        console.error('could not connect to ES', err);
+    } else {
+        console.log('Successfully connect to ES');
+    }
+});
 
 //setup controllers
 app.controllers = {
     users: require('./users/controller')(app),
-    languages: require('./languages/controller')(app)
+    languages: require('./languages/controller')(app),
+    sentences: require('./sentences/controller')(app)
 };
 
 //setup models
 app.models = {
     users: require('./users/model')(app),
-    languages: require('./languages/model')(app)
+    languages: require('./languages/model')(app),
+    sentences: require('./sentences/model')(app)
 };
 
 //include routes

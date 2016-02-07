@@ -1,5 +1,4 @@
 var logger = require('morgan');
-var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var routes = function (app) {
@@ -14,7 +13,10 @@ var routes = function (app) {
     //Languages
     require('./languages/routes')(app);
 
-    //Error Handlers (must be last)
+    //Sentences
+    require('./sentences/routes')(app);
+
+    //Error Handler (must be last)
     app.use(function (err, req, res, next) {
         console.error(err);
         res.status(err.status || 500).send(err);
