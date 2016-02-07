@@ -82,6 +82,10 @@ var sentencesController = function (app) {
         next('not yet implemented');
     }
 
+    function getSentencesCreatedByUser(req, res, next) {
+        next('not yet implemented');
+    }
+
     function createSentence(req, res, next) {
         next('not yet implemented');
     }
@@ -93,6 +97,7 @@ var sentencesController = function (app) {
     return {
         searchSentences: searchSentences,
         getSentenceByIdSentence: getSentenceByIdSentence,
+        getSentencesCreatedByUser: getSentencesCreatedByUser,
         createSentence: createSentence,
         updateSentence: updateSentence
     };

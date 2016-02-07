@@ -6,6 +6,8 @@ var router = function (app) {
     app.post('/sentences', app.controllers.sentences.createSentence);
 
     app.put('/sentences/:sentence_id', app.controllers.sentences.updateSentence);
+
+    app.get('/users/:user_id/sentences', app.controllers.sentences.getSentencesCreatedByUser);
 };
 
 module.exports = router;
