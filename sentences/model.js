@@ -54,7 +54,7 @@ var sentencesModel = function (app) {
         };
 
         if (languagesEnglishNames) {
-            searchOption.index = languagesEnglishNames;
+            searchOption.index = 'lingo-lynx-sentences-' + languagesEnglishNames.toLowerCase();
         }
 
         app.es.search(searchOption, function (err, response) {
@@ -68,12 +68,96 @@ var sentencesModel = function (app) {
         return deferred.promise;
     }
 
+    //expects sentenceId to looks like: langEnglishName-esIndex
+    function getSentenceByIdSentence(sentenceId) {
+        var deferred = q.defer();
+
+        var sentenceIdArray = sentenceId.split('-');
+        var languageName = sentenceIdArray[0];
+        sentenceIdArray.splice(0, 1);
+        var esId = sentenceIdArray.join('');
+
+        if (!esId || esId === '') {
+            deferred.reject('bad sentenceId');
+            return deferred.promise;
+        }
+
+        var searchOption = {
+            index: 'lingo-lynx-sentences-' + languageName.toLowerCase(),
+            type: 'sentence',
+            id: esId
+        };
+
+        app.es.get(searchOption, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(response);
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    function indexNewSentence(languageEnglishName, sentenceObject) {
+        var deferred = q.defer();
+
+        var indexOption = {
+            index: 'lingo-lynx-sentences-' + languageEnglishName.toLowerCase(),
+            type: 'sentence',
+            body: sentenceObject
+        };
+
+        app.es.index(indexOption, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(response);
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    function updateSentence(sentenceId, sentenceObject) {
+        var deferred = q.defer();
+
+        var sentenceIdArray = sentenceId.split('-');
+        var languageName = sentenceIdArray[0];
+        sentenceIdArray.splice(0, 1);
+        var esId = sentenceIdArray.join('');
+
+        if (!esId || esId === '') {
+            deferred.reject('bad sentenceId');
+            return deferred.promise;
+        }
+
+        var updateOption = {
+            index: 'lingo-lynx-sentences-' + languageName.toLowerCase(),
+            type: 'sentence',
+            id: esId,
+            body: {
+                doc: sentenceObject
+            }
+        };
+
+        app.es.update(updateOption, function (err, response) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                deferred.resolve(response);
+            }
+        });
+
+        return deferred.promise;
+    }
+
     return {
         //public query functions
-        //getAllFromSentenceWhereIdSentenceMatches: getAllFromSentenceWhereIdSentenceMatches,
-        //createNewSentence: createNewSentence,
-        //updateSentence: updateSentence,
         searchSentences: searchSentences,
+        getSentenceByIdSentence: getSentenceByIdSentence,
+        indexNewSentence: indexNewSentence,
+        updateSentence: updateSentence,
 
         //record properties
         propertiesThatCanBeSetWhenCreatingNewSentence: ['text', 'idUser', 'idLanguage', 'isActive'],
