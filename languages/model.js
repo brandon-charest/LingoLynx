@@ -1,11 +1,7 @@
 var q = require('q');
 
 var languagesModel = function (app) {
-    function getLanguagesEnglishNameFromIdLanguage(){
-        throw 'not yet implemented';
-    }
-
-    return {
+    var returnObject = {
         //db queries
         getAllFromLanguage: "SELECT * FROM language",
         getAllFromLanguageWhereIdLanguageMatches: "SELECT * FROM language WHERE idLanguage=?",
@@ -21,6 +17,27 @@ var languagesModel = function (app) {
         //functions
         getLanguagesEnglishNameFromIdLanguage: getLanguagesEnglishNameFromIdLanguage
     };
+
+    //todo: create function that takes in array of langId and makes one db call
+    function getLanguagesEnglishNameFromIdLanguage(langId) {
+        var deferred = q.defer();
+
+        app.db.query(returnObject.getAllFromLanguageWhereIdLanguageMatches, langId, function(err, rows){
+            if(err){
+                deferred.reject(err);
+                return;
+            }
+
+            if (rows && rows[0] && rows[0].idUser && rows[0].idUser.toString() === langId.toString()) {
+                deferred.resolve(rows[0]);
+                return;
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    return returnObject; //need to use properties of this object in the functions above
 };
 
 module.exports = languagesModel;
