@@ -44,8 +44,6 @@ var dataSeeds = {
     ]
 };
 
-console.log(dataSeeds.japanese[0]);
-
 //main
 function onESConnection() {
     console.log('Connected to ES');
