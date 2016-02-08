@@ -160,8 +160,8 @@ var sentencesModel = function (app) {
         updateSentence: updateSentence,
 
         //record properties
-        propertiesThatCanBeSetWhenCreatingNewSentence: ['text', 'idUser', 'idLanguage', 'isActive'],
-        propertiesRequiredToCreateNewSentence: ['text', 'idUser', 'idLanguage', 'isActive'],
+        propertiesThatCanBeSetWhenCreatingNewSentence: ['text', 'idUser', 'isActive'],
+        propertiesRequiredToCreateNewSentence: ['text', 'idUser', 'isActive'],
         propertiesThatCanBeSetWhenUpdatingSentence: ['text', 'isActive'],
         propertiesRequiredToUpdateSentence: []
     };
