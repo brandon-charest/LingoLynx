@@ -1,3 +1,13 @@
-/**
- * Created by Brandon on 2/13/2016.
- */
+var router = function (app) {
+
+    app.get('/comments', app.controllers.comments.getAllComments);
+
+    app.get('/comments/:comment_id', app.controllers.comments.getCommentByIdComment);
+
+    app.post('/comments', app.controllers.comments.creatComment);
+
+    app.put('/comments/:comment_id', app.controllers.comments.updateComment);
+
+};
+
+module.exports=router;
