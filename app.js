@@ -41,6 +41,7 @@ app.es.ping({}, function (err) {
 app.controllers = {
     users: require('./users/controller')(app),
     languages: require('./languages/controller')(app),
+    comments: require('./comments/controller')(app),
     sentences: require('./sentences/controller')(app)
 };
 
@@ -48,6 +49,7 @@ app.controllers = {
 app.models = {
     users: require('./users/model')(app),
     languages: require('./languages/model')(app),
+    comments: require('./comments/model')(app),
     sentences: require('./sentences/model')(app)
 };
 
