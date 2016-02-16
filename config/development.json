@@ -1,0 +1,30 @@
+{
+  "mysql":{
+    "connectionSettings": {
+      "host": "localhost",
+      "user": "root",
+      "password": "password",
+      "database": "LingoLynx"
+    }
+  },
+  "es": {
+    "connectionSettings": {
+      "host": "localhost:9200",
+      "comments": "Add 'log': 'trace' for debug"
+    },
+    "indexNameStem": "lingo-lynx-sentences"
+  },
+  "supportedLanguages": [
+    {
+      "name": "français",
+      "englishName": "french"
+    },
+    {
+      "name": "日本語",
+      "englishName": "japanese"
+    }
+  ],
+  "specialLanguageAnalyzers": {
+    "japanese": "kuromoji"
+  }
+}

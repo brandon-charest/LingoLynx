@@ -1,18 +1,15 @@
 var express = require('express');
-var path = require('path');
 var mysql = require('mysql');
 var elasticsearch = require('elasticsearch');
+var config = require('config');
 
 var app = express();
 
 //create connection to mysql database
-//TODO: Move DB information to config file
-app.db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'password',
-    database: 'LingoLynx'
-});
+app.db = mysql.createConnection(config.get('mysql.connectionSettings'));
+
+//create connection to elasticsearch
+app.es = elasticsearch.Client(config.get('es.connectionSettings'));
 
 app.db.connect(function (err) {
     if (err) {
@@ -20,13 +17,6 @@ app.db.connect(function (err) {
     } else {
         console.log('Successfully connect to DB');
     }
-});
-
-//create connection to elasticsearch
-//TODO: Move ES information to config file
-app.es = elasticsearch.Client({
-    host: 'localhost:9200',
-    log: 'trace'
 });
 
 app.es.ping({}, function (err) {
