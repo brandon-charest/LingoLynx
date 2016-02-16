@@ -1,19 +1,16 @@
 var es = require('elasticsearch');
 var async = require('async');
+var config = require('config');
 
 //config
-esClientConfig = {
-    host: 'localhost:9200',
-    log: 'trace'
-};
+var esClientConfig = config.get('es.connectionSettings');
 
-var indexName = 'lingo-lynx-sentences-';
+var indexName = config.get('es.indexNameStem');
 
-var languages = ['japanese', 'french'];
-var specialLanguageAnalyzers = {
-    japanese: 'kuromoji'
-};
-
+var languages = config.get('supportedLanguages').map(function (a) {
+    return a.englishName;
+});
+var specialLanguageAnalyzers = config.get('specialLanguageAnalyzers');
 //end config
 
 var client = new es.Client(esClientConfig);
@@ -22,20 +19,19 @@ client.ping({}, function (err) {
     if (err) {
         console.error(err);
     } else {
+        console.log('Connected to ES');
+
         onESConnection();
     }
 });
 
 //main
 function onESConnection() {
-    console.log('Connected to ES');
-
     var languageAnalyzers = {};
     languages.forEach(function (language) {
         if (specialLanguageAnalyzers[language]) {
             languageAnalyzers[language] = specialLanguageAnalyzers[language];
-        }
-        else {
+        } else {
             languageAnalyzers[language] = language;
         }
     });

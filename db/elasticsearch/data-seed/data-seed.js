@@ -1,18 +1,20 @@
 var es = require('elasticsearch');
 var async = require('async');
 
-process.stdin.setEncoding('utf8');
-process.stdout.setEncoding('utf8');
-
-//config
-esClientConfig = {
-    host: 'localhost:9200',
-    //log: 'trace'
+//data seed
+var dataSeeds = {
+    french: require('./french'),
+    japanese: require('./japanese')
 };
 
-var indexName = 'lingo-lynx-sentences-';
+//config
+var esClientConfig = config.get('es.connectionSettings');
 
-var languages = ['japanese', 'french'];
+var indexName = config.get('es.indexNameStem');
+
+var languages = config.get('es.supportedLanguages').map(function (a) {
+    return a.englishName;
+});
 //end config
 
 var client = new es.Client(esClientConfig);
@@ -21,33 +23,13 @@ client.ping({}, function (err) {
     if (err) {
         console.error(err);
     } else {
+        console.log('Connected to ES');
         onESConnection();
     }
 });
 
-var dataSeeds = {
-    french: [
-        {
-            idUser: 1,
-            idLanguage: 2,
-            isActive: true,
-            text: "Bonjour le monde"
-        }
-    ],
-    japanese: [
-        {
-            idUser: 1,
-            idLanguage: 3,
-            isActive: true,
-            text: "こんにちは世界"
-        }
-    ]
-};
-
 //main
 function onESConnection() {
-    console.log('Connected to ES');
-
     async.each(languages,
         function (language, callback) {
             if (dataSeeds[language] && dataSeeds[language].length) {
