@@ -17,7 +17,8 @@ var commentModel= function (app) {
 
         //functions
         //todo find correct function name and finish function
-        getCommentFromIdComment: getCommentFromIdComment
+        //COMMENTED to start server
+        //getCommentFromIdComment: getCommentFromIdComment
     };
 
 
