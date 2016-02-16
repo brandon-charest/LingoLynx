@@ -1,4 +1,5 @@
 {
+  "authSecret": "canyoukeepasecret",
   "mysql":{
     "connectionSettings": {
       "host": "localhost",
