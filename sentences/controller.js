@@ -105,7 +105,91 @@ var sentencesController = function (app) {
     }
 
     function getSentencesCreatedByUser(req, res, next) {
-        next('not yet implemented');
+        if (!req.params.user_id) {
+            next('missing userId');
+            return;
+        }
+
+        var languagesEnglishNames = [];
+        async.series([
+            //convert languages into languagesEnglishName
+            function (callback) {
+                if (!req.query.languages) {
+                    callback();
+                    return;
+                }
+
+                if (typeof req.query.languages === 'string') {
+                    try {
+                        req.query.languages = parseInt(req.query.languages);
+                    } catch (exception) {
+                        callback(exception);
+                        return;
+                    }
+                }
+
+                if (typeof req.query.languages === 'number') {
+                    req.query.languages = [req.query.languages];
+                }
+
+                if (typeof req.query.languages !== 'object' || !Array.isArray(req.query.languages)) {
+                    callback('bad type for languages');
+                }
+
+                async.each(req.query.languages,
+                    function (languageId, iteratorCallback) {
+                        try {
+                            app.models.languages.getLanguagesEnglishNameFromIdLanguage(languageId)
+                                .then(function (languageEnglishName) {
+                                    languageEnglishNames.push(languageEnglishName);
+                                    iteratorCallback();
+                                })
+                                .catch(function (err) {
+                                    iteratorCallback(err);
+                                })
+                                .done();
+                        } catch (exception) {
+                            iteratorCallback(exception);
+                        }
+                    }, function (err) {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback();
+                        }
+                    });
+            }
+        ], function (err) {
+            if (err) {
+                next(err);
+                return;
+            }
+
+            if (!languagesEnglishNames.length) {
+                languagesEnglishNames = null;
+            }
+
+            var possibleSearchOptions = ['userId', 'sort', 'limit', 'page'];
+            var searchOptions = {
+                typeOfSearch: 'user',
+                idUser: req.params.user_id
+            };
+            possibleSearchOptions.forEach(function (possibleSearchOption) {
+                if (req.query[possibleSearchOption]) {
+                    searchOptions[possibleSearchOption] = req.query[possibleSearchOption];
+                }
+            });
+
+            app.models.sentences.searchSentences(languagesEnglishNames, searchOptions)
+                .then(function (sentences) {
+                    console.log('got these sentences from es', sentences);
+                    res.send(sentences);
+                })
+                .catch(function (err) {
+                    next(err);
+                })
+                .done();
+        });
     }
 
     function createSentence(req, res, next) {
@@ -233,7 +317,55 @@ var sentencesController = function (app) {
     }
 
     function updateSentence(req, res, next) {
-        next('not yet implemented');
+        var sentence = {};
+        var newSentence;
+
+        async.series([
+            //check if all required fields are present in request
+            function (callback) {
+                var missingRequiredPropertiesToUpdateSentence = [];
+
+                app.models.sentences.propertiesRequiredToUpdateSentence.forEach(function (propertyRequiredToUpdateSentence) {
+                    if (!req.body[propertyRequiredToUpdateSentence]) {
+                        missingRequiredPropertiesToUpdateSentence.push(propertyRequiredToUpdateSentence);
+                    }
+                });
+
+                if (missingRequiredPropertiesToUpdateSentence.length) {
+                    callback('Missing the following required fields: ' + missingRequiredPropertiesToUpdateSentence);
+                } else {
+                    callback();
+                }
+            },
+            //create sentence object
+            function (callback) {
+                app.models.sentences.propertiesThatCanBeSetWhenUpdatingSentence.forEach(function (sentenceProperty) {
+                    if (typeof req.body[sentenceProperty] !== 'undefined' && typeof req.body[sentenceProperty] !== 'null') {
+                        sentence[sentenceProperty] = req.body[sentenceProperty];
+                    }
+                });
+
+                callback();
+            },
+            //insert sentence into db
+            function (callback) {
+                app.models.sentences.updateSentence(req.params.sentence_id, sentence)
+                    .then(function (results) {
+                        newSentence = results;
+                        callback();
+                    })
+                    .catch(function (err) {
+                        callback(err);
+                    })
+                    .done();
+            }
+        ], function (err) {
+            if (err) {
+                next(err);
+            } else {
+                res.send(newSentence);
+            }
+        });
     }
 
     return {

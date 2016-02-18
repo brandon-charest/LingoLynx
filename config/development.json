@@ -13,7 +13,7 @@
       "host": "localhost:9200",
       "comments": "Add 'log': 'trace' for debug"
     },
-    "indexNameStem": "lingo-lynx-sentences"
+    "indexNameStem": "lingo-lynx-sentences-"
   },
   "supportedLanguages": [
     {

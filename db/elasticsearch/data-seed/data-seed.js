@@ -1,5 +1,6 @@
 var es = require('elasticsearch');
 var async = require('async');
+var config = require('config');
 
 //data seed
 var dataSeeds = {
@@ -12,7 +13,7 @@ var esClientConfig = config.get('es.connectionSettings');
 
 var indexName = config.get('es.indexNameStem');
 
-var languages = config.get('es.supportedLanguages').map(function (a) {
+var languages = config.get('supportedLanguages').map(function (a) {
     return a.englishName;
 });
 //end config
@@ -47,6 +48,8 @@ function onESConnection() {
                         callback(err);
                     }
                 );
+            } else {
+                callback('could not load data-seed for ' + language);
             }
         },
         function (err) {

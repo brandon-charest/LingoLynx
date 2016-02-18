@@ -38,11 +38,57 @@ var sentencesModel = function (app) {
         return query;
     }
 
+    function constructSearchSentencesByUserQuery(options) {
+        if (!options.idUser) {
+            return;
+        }
+
+        var idUser = options.idUser,
+            sort = options.sort || [{field: "text", type: "asc"}],
+            limit = options.limit || 10,
+            page = options.page || 1,
+            skip = (page - 1) * limit;
+
+        var query = {};
+
+        //define query
+        query.query = {
+            match: {}
+        };
+        query.query.match.idUser = idUser;
+
+
+        //define sort
+        query.sort = [];
+        sort.forEach(function (sortElement) {
+            if (sortElement.field && sortElement.type) {
+                var sortObject = {};
+                sortObject[sortElement.field] = {order: sortElement.type};
+                query.sort.push(sortObject);
+            }
+        });
+        if (!query.sort.length) {
+            delete query.sort;
+        }
+
+        return query;
+    }
+
     //search es
     function searchSentences(languagesEnglishNames, queryOptions) {
         var deferred = q.defer();
 
-        var query = constructSearchSentencesTextQuery(queryOptions);
+        var query;
+        switch (queryOptions.typeOfSearch) {
+            case 'user':
+                query = constructSearchSentencesByUserQuery(queryOptions);
+                break;
+            case 'general':
+            default:
+                query = constructSearchSentencesTextQuery(queryOptions);
+                break;
+        }
+
         if (!query) {
             deferred.reject('could not construct es dsl query');
             return;
