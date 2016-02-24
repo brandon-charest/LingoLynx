@@ -17,30 +17,28 @@ describe('Languages', function () {
 
                 app.db.connect(function (err) {
                     assert.ifError(err);
-                    languageModel = require('../../languages/model')(app);
+                    languageModel = new require('../../languages/model')(app);
                     done();
                 });
             });
 
-            //todo: Error: timeout of 2000ms exceeded. Ensure the done() callback is being called in this test
             it('should return "spanish" with an input of 1', function (done) {
                 var expectedOutput = 'spanish';
-                console.log('first')
-                languageModel.getLanguagesEnglishNameFromIdLanguage(1)
 
+                return languageModel.getLanguagesEnglishNameFromIdLanguage(1)
                     .then(function (languageEnglishName) {
-                        console.log('second')
-                        assert.equal(languageEnglishName, expectedOutput);
-
-                        done();
-                    }).catch(function (err) {
-                        console.log('third')
-                        assert.ifError(err);
+                       try {
+                           should.deepEqual(languageEnglishName.name, expectedOutput);
+                       } catch(err){
+                           done(err);
+                       }
                         done();
                     });
-                        done();
+
+                    });
+
             });
         });
 
-    });
+
 });
