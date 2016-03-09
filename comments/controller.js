@@ -3,13 +3,17 @@
  */
 var async = require('async');
 var q = require('q');
-
+var commentsModel = require("./model");
 
 var commentsController = function(app){
     function queryDBForComments(commentId){
         var deferred = q.defer();
 
+<<<<<<< Updated upstream
        app.db.query(app.models.comments.getAllFromCommentWhereIdCommentMatches, [commentId], function (err, rows){
+=======
+        app.db.query(commentsModel.getAllFromCommentsWhereIdCommentMatches, [commentId], function (err, rows){
+>>>>>>> Stashed changes
             if(err){
                 deferred.reject(err);
                 return;
@@ -26,7 +30,11 @@ var commentsController = function(app){
     }
 
     function getAllComments(req, res, next){
+<<<<<<< Updated upstream
         app.db.query(app.models.comments.getAllFromComment, function(err, rows){
+=======
+        app.db.query(commentsModel.getAllFromComments, function(err, rows){
+>>>>>>> Stashed changes
             if(err){
                 next(err);
                 return;
@@ -62,7 +70,7 @@ var commentsController = function(app){
             function(callback){
                 var missingRequiredProptertiesToCreateNewComment=[];
 
-                app.models.comments.propertiesRequiredToCreateNewComment.forEach(function (propertyRequiredToCreateNewComment){
+                commentsModel.propertiesRequiredToCreateNewComment.forEach(function (propertyRequiredToCreateNewComment){
                     if(!req.body[propertyRequiredToCreateNewComment]) {
                         missingRequiredProptertiesToCreateNewComment.push(propertyRequiredToCreateNewComment);
                     }
@@ -76,7 +84,7 @@ var commentsController = function(app){
             },
             //create comment object
             function(callback){
-                app.models.comments.propertiesThatCanBeSetWhenCreatingNewComment.forEach(function (commentProperty){
+                commentsModel.propertiesThatCanBeSetWhenCreatingNewComment.forEach(function (commentProperty){
                     if(req.body [commentProperty]) {
                         comment[commentProperty]=req.body[commentProperty];
                     }
@@ -91,7 +99,7 @@ var commentsController = function(app){
             },
             //instert comment into db
             function(callback){
-                app.db.query(app.models.comments.createNewComment, [comment], function(err, results) {
+                app.db.query(commentsModel.createNewComment, [comment], function(err, results) {
                     if(err){
                         callback(err);
                         return;
@@ -142,7 +150,11 @@ var commentsController = function(app){
             function(callback){
                 var missingRequiredPropertiesToUpdateComment=[];
 
+<<<<<<< Updated upstream
                 app.models.comments.propertiesRequiredToUpdateComment.forEach(function (propertiesRequiredToUpdateComment) {
+=======
+                commentsModel.propertiesRequiredtoUpdateComment.forEach(function (propertiesRequiredToUpdateComment) {
+>>>>>>> Stashed changes
                     if(!req.body[propertiesRequiredToUpdateComment]) {
                         missingRequiredPropertiesToUpdateComment.push(propertiesRequiredToUpdateComment);
                     }
@@ -157,7 +169,11 @@ var commentsController = function(app){
             //create comment object
             function(callback) {
                 var thereExsistsAPropertyThatWillBeUpdated;
+<<<<<<< Updated upstream
                 app.models.comments.propertiesThatCanBSetWhenUpdatingComment.forEach(function (commentProperty) {
+=======
+                commentsModel.propertiesThatCanBeSetWhenUpdatingComment.forEach(function (commentProperty) {
+>>>>>>> Stashed changes
                     if(req.body[commentProperty]) {
                         comment[commentProperty]=req.body[commentProperty]
                         thereExsistsAPropertyThatWillBeUpdated=true;
@@ -174,12 +190,12 @@ var commentsController = function(app){
             function(callback){
                 var idCommentAsInt;
                 try{
-                    idCommentAsInt=parseInt(idComment);
+                    idCommentAsInt = parseInt(idComment, 10);
                 } catch (exception) {
                     callback(exception);
                 }
 
-                app.db.query(app.models.comments.updateComment, [comment, idCommentAsInt], function (err) {
+                app.db.query(commentsModel.updateComment, [comment, idCommentAsInt], function (err) {
                     if(err) {
                         callback(err);
                         return;

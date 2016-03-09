@@ -1,11 +1,13 @@
-var router = function (app) {
-    app.get('/languages', app.controllers.languages.getAllLanguages);
+var languagesController = require("./controller");
 
-    app.get('/languages/:language_id', app.controllers.languages.getLanguageByIdLanguage);
+var languageRoutes = function(app) {
+    app.get('/languages', languagesController.getAllLanguages);
 
-    app.post('/languages', app.controllers.languages.createLanguage);
+    app.get('/languages/:language_id', languagesController.getLanguageByIdLanguage);
 
-    app.put('/languages/:language_id', app.controllers.languages.updateLanguage);
+    app.post('/languages', languagesController.createLanguage);
+
+    app.put('/languages/:language_id', languagesController.updateLanguage);
 };
 
-module.exports = router;
+module.exports = languageRoutes;

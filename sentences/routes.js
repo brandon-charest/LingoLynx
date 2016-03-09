@@ -1,13 +1,15 @@
-var router = function (app) {
-    app.get('/sentences/search', app.controllers.sentences.searchSentences);
+var sentencesController = require("./controller");
 
-    app.get('/sentences/:sentence_id', app.controllers.sentences.getSentenceByIdSentence);
+var sentenceRoutes = function (app) {
+    app.get('/sentences/search', sentencesController.searchSentences);
 
-    app.post('/sentences', app.controllers.sentences.createSentence);
+    app.get('/sentences/:sentence_id', sentencesController.getSentenceByIdSentence);
 
-    app.put('/sentences/:sentence_id', app.controllers.sentences.updateSentence);
+    app.post('/sentences', sentencesController.createSentence);
 
-    app.get('/users/:user_id/sentences', app.controllers.sentences.getSentencesCreatedByUser);
+    app.put('/sentences/:sentence_id', sentencesController.updateSentence);
+
+    app.get('/users/:user_id/sentences', sentencesController.getSentencesCreatedByUser);
 };
 
-module.exports = router;
+module.exports = sentenceRoutes;

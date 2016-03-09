@@ -17,6 +17,7 @@ var commentModel = function (app) {
 
 
     };
+<<<<<<< Updated upstream
 
     function getCommentIdByIdComment(commentId){
         var deferred= q.defer();
@@ -51,5 +52,9 @@ var commentModel = function (app) {
     }
     return returnObject;
 
+=======
+    
+    return returnObject;
+>>>>>>> Stashed changes
 };
 module.exports = commentModel;

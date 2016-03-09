@@ -1,11 +1,13 @@
-var router = function (app) {
-    app.get('/users', app.controllers.users.getAllUsers);
+var usersController = require("./controller");
 
-    app.get('/users/:user_id', app.controllers.users.getUserByIdUser);
+var usersRoutes = function (app) {
+    app.get('/users', usersController.getAllUsers);
 
-    app.post('/users', app.controllers.users.createUser);
+    app.get('/users/:user_id', usersController.getUserByIdUser);
 
-    app.put('/users/:user_id', app.controllers.users.updateUser);
+    app.post('/users', usersController.createUser);
+
+    app.put('/users/:user_id', usersController.updateUser);
 };
 
-module.exports = router;
+module.exports = usersRoutes;

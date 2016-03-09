@@ -1,49 +1,57 @@
-var express = require('express');
-var mysql = require('mysql');
-var elasticsearch = require('elasticsearch');
-var config = require('config');
+var config = require('./config/development');
+var app = require('express')();
 
-var app = express();
+app.log = console.log;
+app.logError = console.error;
+app.logWarning = console.warning;
 
 //create connection to mysql database
-app.db = mysql.createConnection(config.get('mysql.connectionSettings'));
+app.db = require('mysql').createConnection(config.database.connectionSettings);
+app.db.connect(function(err) {
+    if (err) {
+        app.logError('could not connect to DB', err);
+        return;
+    }
+    app.log('Successfully connect to DB');
+});
 
 //create connection to elasticsearch
-app.es = elasticsearch.Client(config.get('es.connectionSettings'));
-
-app.db.connect(function (err) {
+app.es = require('elasticsearch').Client(config.elasticsearch.connectionSettings);
+app.es.ping({}, function(err) {
     if (err) {
-        console.error('could not connect to DB', err);
-    } else {
-        console.log('Successfully connect to DB');
+        app.logError('could not connect to ES', err);
+        return;
     }
+    app.log('Successfully connect to ES');
 });
 
-app.es.ping({}, function (err) {
-    if (err) {
-        console.error('could not connect to ES', err);
-    } else {
-        console.log('Successfully connect to ES');
-    }
+/*
+ * Routes
+ */
+
+var logger = require('morgan');
+var bodyParser = require('body-parser');
+
+//Route setup (must be first)
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: false
+}));
+
+//Users
+require('./users/routes')(app);
+
+//Languages
+require('./languages/routes')(app);
+
+//Sentences
+require('./sentences/routes')(app);
+
+//Error Handler (must be last)
+app.use(function(err, req, res, next) {
+    app.logError(err.stack || err);
+    res.status(err.status || 500).send(err);
 });
-
-//setup controllers
-app.controllers = {
-    users: require('./users/controller')(app),
-    languages: require('./languages/controller')(app),
-    comments: require('./comments/controller')(app),
-    sentences: require('./sentences/controller')(app)
-};
-
-//setup models
-app.models = {
-    users: require('./users/model')(app),
-    languages: require('./languages/model')(app),
-    comments: require('./comments/model')(app),
-    sentences: require('./sentences/model')(app)
-};
-
-//include routes
-require('./routes')(app);
 
 module.exports = app;

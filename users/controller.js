@@ -1,11 +1,12 @@
 var async = require('async');
 var q = require('q');
+var usersModel = require('./model');
 
 var usersController = function (app) {
     function queryDBForUser(userId) {
         var deferred = q.defer();
 
-        app.db.query(app.models.users.getAllFromUserWhereIdUserMatches, [userId], function (err, rows) {
+        app.db.query(usersModel.getAllFromUserWhereIdUserMatches, [userId], function (err, rows) {
             if (err) {
                 deferred.reject(err);
                 return;
@@ -22,7 +23,7 @@ var usersController = function (app) {
     }
 
     function getAllUsers(req, res, next) {
-        app.db.query(app.models.users.getAllFromUser, function (err, rows) {
+        app.db.query(usersModel.getAllFromUser, function (err, rows) {
             if (err) {
                 next(err);
                 return;
@@ -61,7 +62,7 @@ var usersController = function (app) {
             function (callback) {
                 var missingRequiredPropertiesToCreateNewUser = [];
 
-                app.models.users.propertiesRequiredToCreateNewUser.forEach(function (propertyRequiredToCreateNewUser) {
+                usersModel.propertiesRequiredToCreateNewUser.forEach(function (propertyRequiredToCreateNewUser) {
                     if (!req.body[propertyRequiredToCreateNewUser]) {
                         missingRequiredPropertiesToCreateNewUser.push(propertyRequiredToCreateNewUser);
                     }
@@ -80,7 +81,7 @@ var usersController = function (app) {
                     return;
                 }
 
-                app.models.users.encryptPassword(req.body.password)
+                usersModel.encryptPassword(req.body.password)
                     .then(function (encryptedPassword) {
                         req.body.password = encryptedPassword;
                         callback();
@@ -92,7 +93,7 @@ var usersController = function (app) {
             },
             //create user object
             function (callback) {
-                app.models.users.propertiesThatCanBeSetWhenCreatingNewUser.forEach(function (userProperty) {
+                usersModel.propertiesThatCanBeSetWhenCreatingNewUser.forEach(function (userProperty) {
                     if (req.body[userProperty]) {
                         user[userProperty] = req.body[userProperty];
                     }
@@ -107,7 +108,7 @@ var usersController = function (app) {
             },
             //insert user into db
             function (callback) {
-                app.db.query(app.models.users.createNewUser, [user], function (err, results) {
+                app.db.query(usersModel.createNewUser, [user], function (err, results) {
                     if (err) {
                         callback(err);
                         return;
@@ -156,7 +157,7 @@ var usersController = function (app) {
             function (callback) {
                 var missingRequiredPropertiesToUpdateUser = [];
 
-                app.models.users.propertiesRequiredToUpdateUser.forEach(function (propertyRequiredToUpdateUser) {
+                usersModel.propertiesRequiredToUpdateUser.forEach(function (propertyRequiredToUpdateUser) {
                     if (!req.body[propertyRequiredToUpdateUser]) {
                         missingRequiredPropertiesToUpdateUser.push(propertyRequiredToUpdateUser);
                     }
@@ -175,7 +176,7 @@ var usersController = function (app) {
                     return;
                 }
 
-                app.models.users.encryptPassword(req.body.password)
+                usersModel.encryptPassword(req.body.password)
                     .then(function (encryptedPassword) {
                         req.body.password = encryptedPassword;
                         callback();
@@ -188,7 +189,7 @@ var usersController = function (app) {
             //create user object
             function (callback) {
                 var thereExistsAPropertyThatWillBeUpdated;
-                app.models.users.propertiesThatCanBeSetWhenUpdatingUser.forEach(function (userProperty) {
+                usersModel.propertiesThatCanBeSetWhenUpdatingUser.forEach(function (userProperty) {
                     if (req.body[userProperty]) {
                         user[userProperty] = req.body[userProperty];
                         thereExistsAPropertyThatWillBeUpdated = true;
@@ -210,7 +211,7 @@ var usersController = function (app) {
                     callback(exception);
                 }
 
-                app.db.query(app.models.users.updateUser, [user, idUserAsAnInt], function (err) {
+                app.db.query(usersModel.updateUser, [user, idUserAsAnInt], function (err) {
                     if (err) {
                         callback(err);
                         return;

@@ -1,5 +1,7 @@
 var async = require('async');
 var q = require('q');
+var sentencesModel = require("./model");
+var languagesModel = require("../languages/model");
 
 var sentencesController = function (app) {
     function searchSentences(req, res, next) {
@@ -37,9 +39,9 @@ var sentencesController = function (app) {
                 async.each(req.query.languages,
                     function (languageId, iteratorCallback) {
                         try {
-                            app.models.languages.getLanguagesEnglishNameFromIdLanguage(languageId)
+                            languagesModel.getLanguagesEnglishNameFromIdLanguage(languageId)
                                 .then(function (languageEnglishName) {
-                                    languageEnglishNames.push(languageEnglishName);
+                                    languagesEnglishNames.push(languageEnglishName);
                                     iteratorCallback();
                                 })
                                 .catch(function (err) {
@@ -75,7 +77,7 @@ var sentencesController = function (app) {
                 }
             });
 
-            app.models.sentences.searchSentences(languagesEnglishNames, searchOptions)
+            sentencesModel.searchSentences(languagesEnglishNames, searchOptions)
                 .then(function (sentences) {
                     console.log('got these sentences from es', sentences);
                     res.send(sentences);
@@ -93,7 +95,7 @@ var sentencesController = function (app) {
             return;
         }
 
-        app.models.sentences.getSentenceByIdSentence(req.params.sentence_id)
+        sentencesModel.getSentenceByIdSentence(req.params.sentence_id)
             .then(function (sentence) {
                 console.log('got these sentences from es', sentence);
                 res.send(sentence);
@@ -139,9 +141,9 @@ var sentencesController = function (app) {
                 async.each(req.query.languages,
                     function (languageId, iteratorCallback) {
                         try {
-                            app.models.languages.getLanguagesEnglishNameFromIdLanguage(languageId)
+                            languagesModel.getLanguagesEnglishNameFromIdLanguage(languageId)
                                 .then(function (languageEnglishName) {
-                                    languageEnglishNames.push(languageEnglishName);
+                                    languagesEnglishNames.push(languageEnglishName);
                                     iteratorCallback();
                                 })
                                 .catch(function (err) {
@@ -180,7 +182,7 @@ var sentencesController = function (app) {
                 }
             });
 
-            app.models.sentences.searchSentences(languagesEnglishNames, searchOptions)
+            sentencesModel.searchSentences(languagesEnglishNames, searchOptions)
                 .then(function (sentences) {
                     console.log('got these sentences from es', sentences);
                     res.send(sentences);
@@ -208,7 +210,7 @@ var sentencesController = function (app) {
             },
             //remove idUser from propertiesRequiredToCreateNewSentence
             function (callback) {
-                propertiesRequiredToCreateNewSentence = app.models.sentences.propertiesRequiredToCreateNewSentence;
+                propertiesRequiredToCreateNewSentence = sentencesModel.propertiesRequiredToCreateNewSentence;
 
                 if (!userId) {
                     callback();
@@ -231,7 +233,7 @@ var sentencesController = function (app) {
 
                 if (typeof req.query.language === 'string') {
                     try {
-                        req.query.language = parseInt(req.query.languages);
+                        req.query.language = parseInt(req.query.languages, 10);
                     } catch (exception) {
                         callback(exception);
                         return;
@@ -243,7 +245,7 @@ var sentencesController = function (app) {
                 }
 
 
-                app.models.languages.getLanguagesEnglishNameFromIdLanguage(req.query.language)
+                languagesModel.getLanguagesEnglishNameFromIdLanguage(req.query.language)
                     .then(function (langEnglishName) {
                         languageEnglishName = langEnglishName;
                         callback();
@@ -272,7 +274,7 @@ var sentencesController = function (app) {
             },
             //create sentence object
             function (callback) {
-                app.models.sentences.propertiesThatCanBeSetWhenCreatingNewSentence.forEach(function (sentenceProperty) {
+                sentencesModel.propertiesThatCanBeSetWhenCreatingNewSentence.forEach(function (sentenceProperty) {
                     if (req.body[sentenceProperty]) {
                         sentence[sentenceProperty] = req.body[sentenceProperty];
                     }
@@ -282,7 +284,7 @@ var sentencesController = function (app) {
             },
             //set idUser in sentence if possible
             function (callback) {
-                var idUserIndex = app.models.sentences.propertiesThatCanBeSetWhenCreatingNewSentence.indexOf(idUser);
+                var idUserIndex = sentencesModel.propertiesThatCanBeSetWhenCreatingNewSentence.indexOf(userId);
                 if (userId && idUserIndex > -1) {
                     sentence.idUser = userId;
                 }
@@ -296,7 +298,7 @@ var sentencesController = function (app) {
             },
             //insert sentence into db
             function (callback) {
-                app.models.sentences.indexNewSentence(languageEnglishName, sentence)
+                sentencesModel.indexNewSentence(languageEnglishName, sentence)
                     .then(function (results) {
                         newSentence = results;
                         callback();
@@ -325,7 +327,7 @@ var sentencesController = function (app) {
             function (callback) {
                 var missingRequiredPropertiesToUpdateSentence = [];
 
-                app.models.sentences.propertiesRequiredToUpdateSentence.forEach(function (propertyRequiredToUpdateSentence) {
+                sentencesModel.propertiesRequiredToUpdateSentence.forEach(function (propertyRequiredToUpdateSentence) {
                     if (!req.body[propertyRequiredToUpdateSentence]) {
                         missingRequiredPropertiesToUpdateSentence.push(propertyRequiredToUpdateSentence);
                     }
@@ -339,7 +341,7 @@ var sentencesController = function (app) {
             },
             //create sentence object
             function (callback) {
-                app.models.sentences.propertiesThatCanBeSetWhenUpdatingSentence.forEach(function (sentenceProperty) {
+                sentencesModel.propertiesThatCanBeSetWhenUpdatingSentence.forEach(function (sentenceProperty) {
                     if (typeof req.body[sentenceProperty] !== 'undefined' && typeof req.body[sentenceProperty] !== 'null') {
                         sentence[sentenceProperty] = req.body[sentenceProperty];
                     }
@@ -349,7 +351,7 @@ var sentencesController = function (app) {
             },
             //insert sentence into db
             function (callback) {
-                app.models.sentences.updateSentence(req.params.sentence_id, sentence)
+                sentencesModel.updateSentence(req.params.sentence_id, sentence)
                     .then(function (results) {
                         newSentence = results;
                         callback();
