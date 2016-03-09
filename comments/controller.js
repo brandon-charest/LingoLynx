@@ -9,7 +9,7 @@ var commentsController = function(app){
     function queryDBForComments(commentId){
         var deferred = q.defer();
 
-        app.db.query(app.models.comments.getAllFromCommentsWhereIdCommentMatches, [commentId], function (err, row){
+       app.db.query(app.models.comments.getAllFromCommentWhereIdCommentMatches, [commentId], function (err, rows){
             if(err){
                 deferred.reject(err);
                 return;
@@ -20,11 +20,13 @@ var commentsController = function(app){
                 return;
             }
         });
+
         return deferred.promise;
+
     }
 
     function getAllComments(req, res, next){
-        app.db.query(app.models.comments.getAllFromComments, function(err, rows){
+        app.db.query(app.models.comments.getAllFromComment, function(err, rows){
             if(err){
                 next(err);
                 return;
@@ -51,7 +53,7 @@ var commentsController = function(app){
             .done();
     }
 
-    function creatComment(req, res, next){
+    function createComment(req, res, next){
         var comment={};
         var newComment;
         var newCommentId;
@@ -84,7 +86,7 @@ var commentsController = function(app){
             },
             //set comment as active
             function(callback) {
-                comment.isActive=true;
+                comment.isHidden=true;
                 callback();
             },
             //instert comment into db
@@ -140,7 +142,7 @@ var commentsController = function(app){
             function(callback){
                 var missingRequiredPropertiesToUpdateComment=[];
 
-                app.models.comments.propertiesRequiredtoUpdateComment.forEach(function (propertiesRequiredToUpdateComment) {
+                app.models.comments.propertiesRequiredToUpdateComment.forEach(function (propertiesRequiredToUpdateComment) {
                     if(!req.body[propertiesRequiredToUpdateComment]) {
                         missingRequiredPropertiesToUpdateComment.push(propertiesRequiredToUpdateComment);
                     }
@@ -155,7 +157,7 @@ var commentsController = function(app){
             //create comment object
             function(callback) {
                 var thereExsistsAPropertyThatWillBeUpdated;
-                app.models.comments.propertiesThatCanBeSetWhenUpdatingComment.forEach(function (commentProperty) {
+                app.models.comments.propertiesThatCanBSetWhenUpdatingComment.forEach(function (commentProperty) {
                     if(req.body[commentProperty]) {
                         comment[commentProperty]=req.body[commentProperty]
                         thereExsistsAPropertyThatWillBeUpdated=true;
@@ -212,7 +214,7 @@ var commentsController = function(app){
     return {
         getAllComments: getAllComments,
         getCommentByIdComment: getCommentByIdComment,
-        createComment: creatComment,
+        createComment: createComment,
         updateComment: updateComment
     };
 };

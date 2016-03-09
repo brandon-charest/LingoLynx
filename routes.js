@@ -16,6 +16,9 @@ var routes = function (app) {
     //Sentences
     require('./sentences/routes')(app);
 
+    //Comments
+    require('./comments/routes')(app);
+
     //Error Handler (must be last)
     app.use(function (err, req, res, next) {
         console.error(err.stack || err);

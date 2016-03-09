@@ -21,16 +21,19 @@ var languagesModel = function (app) {
     //todo: create function that takes in array of langId and makes one db call
     function getLanguagesEnglishNameFromIdLanguage(langId) {
         var deferred = q.defer();
-
         app.db.query(returnObject.getAllFromLanguageWhereIdLanguageMatches, langId, function(err, rows){
+
             if(err){
                 deferred.reject(err);
                 return;
             }
 
             if (rows && rows[0] && rows[0].idUser && rows[0].idUser.toString() === langId.toString()) {
+
                 deferred.resolve(rows[0]);
                 return;
+            } else {
+                deferred.reject('failure ')
             }
         });
 

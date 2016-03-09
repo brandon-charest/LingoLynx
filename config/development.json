@@ -23,6 +23,10 @@
     {
       "name": "日本語",
       "englishName": "japanese"
+    },
+    {
+      "name": "español",
+      "englishName": "spanish"
     }
   ],
   "specialLanguageAnalyzers": {

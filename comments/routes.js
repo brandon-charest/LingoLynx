@@ -4,7 +4,7 @@ var router = function (app) {
 
     app.get('/comments/:comment_id', app.controllers.comments.getCommentByIdComment);
 
-    app.post('/comments', app.controllers.comments.creatComment);
+    app.post('/comments', app.controllers.comments.createComment);
 
     app.put('/comments/:comment_id', app.controllers.comments.updateComment);
 
